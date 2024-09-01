@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    environment:
+      HUGGINGFACE_TOKEN: "${HUGGINGFACE_TOKEN}"
+      CHROMADB_HOST: "chromadb"
+      CHROMADB_PORT: "8000"
+      PDF_FILE_PATH: "Politica_de_Privacidade.pdf"
+      TEXT_CHUNK_SIZE: "150"
+      TEXT_CHUNK_OVERLAP: "3"
+    ports:
+      - "8001:8000"
+    command: python main.py
+    depends_on:
+      - chromadb
+    networks:
+      - projetorag
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: chromadb
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./chroma_data:/chroma_data
+    environment:
+      - CHROMA_DB_DIR=/chroma_data
+    networks:
+      - projetorag
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  projetorag:
+    driver: bridge
